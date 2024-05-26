@@ -1,9 +1,10 @@
 const express = require('express');
-const {storeEmployee}= require('./../controllers/AuthController')
 const router = express.Router()
+const {checkAllFields, AuthoriseUser}=require('./../controllers/AuthController')
 
 router.post('/login',[
-    storeEmployee
-])
+    checkAllFields,
+    AuthoriseUser
+]);
 
 module.exports = router
