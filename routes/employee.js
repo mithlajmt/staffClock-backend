@@ -1,8 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const {storeEmployee} = require('./../controllers/Employee')
+const {
+     generateEmployeeID,
+    storeEmployee,
+    checkAllFields,
+    ValidateData,} = require('./../controllers/Employee')
 
 router.post('/employee',[
+    checkAllFields,
+    ValidateData,
+    generateEmployeeID,
     storeEmployee,
 ]);
 

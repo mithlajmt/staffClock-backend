@@ -74,7 +74,31 @@ const AuthoriseUser = async (req, res) => {
   }
 };
 
+
+const getUserData = async (req, res) => {
+  try {
+    const { role } = req.user;
+    console.log(role);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        role: role
+      },
+    });
+  } catch (err) {
+    console.error("Error retrieving user data:", err);
+
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while retrieving user data. Please try again later.',
+    });
+  }
+}
+
+
 module.exports = {
   checkAllFields,
   AuthoriseUser,
+  getUserData,
 };

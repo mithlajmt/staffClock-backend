@@ -31,6 +31,9 @@ const EmployeeSchema = new mongoose.Schema({
   dateOfBirth: {
     type: Date,
   },
+  jobTitle:{
+    type: String,
+  },
   gender: {
     type: String,
   },

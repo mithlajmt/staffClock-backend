@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Auth = require('./routes/Auth');
 const employee = require('./routes/employee')
+const {checkToken,isAdmin}=require('./utilities/jwt')
 const app = express();
 const cors = require('cors');
 require("dotenv").config();
@@ -22,4 +23,4 @@ mongoose
   .catch((err) => console.log(err));
 
 app.use('/Auth',Auth)
-app.use('/admin',employee)
+app.use('/admin',checkToken,isAdmin,employee);
