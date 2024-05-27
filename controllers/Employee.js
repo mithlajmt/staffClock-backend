@@ -116,10 +116,10 @@ const storeEmployee = async (req, res) => {
     console.log(req.body)
 
     const password = generatePassword(employeeName,contactEmail);
-    console.log(password);
 
     const saltRound = 10
-    const hashedPass = await bcrypt.hash(password,saltRound)
+    const hashedPass = await bcrypt.hash(password,saltRound);
+
     const userID = req.employeeID
 
     const employee = new Employee({
@@ -138,8 +138,10 @@ const storeEmployee = async (req, res) => {
 
     await employee.save();
     await sendWelcomeEmail(contactEmail, userID, password);
+    console.log(password, 'email')
     res.json({
-      message: "admin Added SuccessFully",
+      success:true,
+      message: "employee Added SuccessFully",
     });
   } catch (err) {
     console.log(err);

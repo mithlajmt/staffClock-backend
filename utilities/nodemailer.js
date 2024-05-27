@@ -9,7 +9,7 @@ async function sendWelcomeEmail(to, employeeId, password) {
     service: 'gmail',
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // Use STARTTLS if supported by your server
+    secure: false, 
     auth: {
       user: process.env.GMAIL_ADDRESS,
       pass: process.env.GOOGLE_APP_PASS,
@@ -17,10 +17,9 @@ async function sendWelcomeEmail(to, employeeId, password) {
   });
 
 
-  // Create email options with sender information
   const mailOptions = {
     from: {
-      name: 'workSync',
+      name: 'staffClock',
       address: process.env.GMAIL_ADDRESS,
     },
     to,
@@ -39,7 +38,7 @@ async function sendWelcomeEmail(to, employeeId, password) {
     Welcome aboard!
 
     Best regards,
-    The WorkSync Team
+    The staffClocl Team
 
     P.S. We're excited to see what you'll accomplish! Don't forget to join our community using this link.`,
     html: `Hey! <span style="color: #336699; font-weight: bold;">Congratulations on your new job</span>. We're excited to have you on board! 
@@ -58,12 +57,11 @@ async function sendWelcomeEmail(to, employeeId, password) {
     <p>Welcome aboard!</p>
 
     <p><span style="color: #336699; font-style: italic;">Best regards,</span></p>
-    <p><span style="color: #336699; font-weight: bold;">The WorkSync Team</span></p>
+    <p><span style="color: #336699; font-weight: bold;">The StaffClock Team</span></p>
 
     <p><span style="color: #336699; font-weight: bold;">P.S.</span> We're excited to see what you'll accomplish! Don't forget to join our employee Slack channel at [link].</p>`,
   };
 
-  // Send email and handle errors gracefully
   try {
     await transporter.sendMail(mailOptions);
     console.log('Welcome email sent successfully!');
@@ -72,4 +70,6 @@ async function sendWelcomeEmail(to, employeeId, password) {
   }
 }
 
-module.exports = {sendWelcomeEmail};
+module.exports = {
+  sendWelcomeEmail
+};

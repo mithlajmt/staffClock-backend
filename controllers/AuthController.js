@@ -6,6 +6,20 @@ const client = require('./../utilities/redis');
 const crypto = require('crypto')
 
 // Middleware for checking if all fields are provided
+
+
+const checkUserLog = (req, res, next) => {
+  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  if (token) {
+    return res.status(400).json({
+      success: false,
+      message: "User already logged in",
+    });
+  }
+  next();
+};
+
 const checkAllFields = async (req, res, next) => {
   try {
     const { userID, password } = req.body;
@@ -26,6 +40,7 @@ const checkAllFields = async (req, res, next) => {
 const AuthoriseUser = async (req, res) => {
   try {
     const { userID, password } = req.body;
+    console.log(userID,password)
     const user = await Employee.findOne({ userID });
 
     if (!user) {
@@ -35,7 +50,9 @@ const AuthoriseUser = async (req, res) => {
       });
     }
 
+    
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log(isMatch)
 
     if (!isMatch) {
       return res.status(400).json({
@@ -70,7 +87,10 @@ const AuthoriseUser = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ 
+      success: false,
+      message: "Server error" 
+    });
   }
 };
 
@@ -98,6 +118,7 @@ const getUserData = async (req, res) => {
 
 
 module.exports = {
+  checkUserLog,
   checkAllFields,
   AuthoriseUser,
   getUserData,
