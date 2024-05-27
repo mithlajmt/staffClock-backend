@@ -5,7 +5,6 @@ const EmployeeSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
-
   userID: {
     unique: true,
     required: true,
@@ -31,7 +30,7 @@ const EmployeeSchema = new mongoose.Schema({
   dateOfBirth: {
     type: Date,
   },
-  jobTitle:{
+  jobTitle: {
     type: String,
   },
   gender: {
@@ -44,12 +43,29 @@ const EmployeeSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ["admin", "employee"],
-    default:'employee',
+    default: 'employee',
   },
   salary: {
     required: true,
     type: Number,
   },
+  isLate:{
+    type: Boolean,
+    default:false,
+  },
+  shiftTime: {
+    type: [{
+      startTime: {
+        type: String,
+        required: true
+      },
+      endTime: {
+        type: String,
+        required: true
+      }
+    }],
+    default: [{ startTime: '10:00', endTime: '17:00' }],
+  }
 });
 
 const Employee = mongoose.model("Employee", EmployeeSchema);

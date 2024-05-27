@@ -68,7 +68,7 @@ const AuthoriseUser = async (req, res) => {
     };
 
     // Sign the JWT token
-    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '4h' });
 
     //creating secured random id for creating secretId for storing token
     const randomString = crypto.randomBytes(16).toString('hex');

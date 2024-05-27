@@ -62,9 +62,15 @@ const getCheckInTime = async (req, res) => {
         });
 
         if (!attendance) {
-            return res.status(404).json({
+            return res.status(201).json({
                 success: false,
                 message: "No check-in record found for today"
+            });
+        }
+        if (attendance.checkOut) {
+            return res.status(201).json({
+                success: false,
+                checkInTime: 'm'
             });
         }
 
@@ -109,9 +115,196 @@ const RegisterCheckIn = async (req, res) => {
     }
 };
 
+// to check whether employee checkedin to checkout and is he already checked out
+const checkInExists = async (req, res, next) => {
+    try {
+        const { userID } = req.user;
+        
+        // Get the start and end of the current day
+        const currentDate = new Date();
+        const startOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+        const endOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59);
+
+        const existingAttendance = await Attendance.findOne({
+            userID: userID,
+            checkIn: { $gte: startOfDay, $lte: endOfDay }
+        });
+        if (!existingAttendance) {
+            return res.status(400).json({
+                success: false,
+                message: "checkIn First "
+            });
+        }
+
+        if (existingAttendance.checkOut) {
+            return res.status(400).json({
+                success: false,
+                message: "You have already checkededout in today"
+            });
+        }
+        next();
+    } catch (error) {
+        console.error("Error checking if user already logged in today:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+  };
+  
+  // Middleware to register employee check-out
+  const registerCheckOut = async (req, res, next) => {
+    try {
+      // Extract employee ID and current date
+      const { userID } = req.user;
+      const currentDate = new Date().toISOString().split('T')[0]; 
+      const checkOut = new Date();
+  
+      const query = { userID, date: { $gte: new Date(currentDate), $lt: new Date(currentDate + 'T23:59:59Z') } };
+  
+      let attendance = await Attendance.findOne(query);
+      
+      if (!attendance) {
+        return res.status(404).json({ success: false, message: 'Check-in record not found' });
+      }
+  
+      // Check if the last break has an open startTime without an endTime
+      const breaks = attendance.breaks;
+      if (breaks.length > 0 && !breaks[breaks.length - 1].endTime) {
+        breaks[breaks.length - 1].endTime = checkOut;
+      }
+  
+      let totalBreakTime = 0;
+      breaks.forEach(breakPeriod => {
+        if (breakPeriod.startTime && breakPeriod.endTime) {
+          totalBreakTime += (new Date(breakPeriod.endTime) - new Date(breakPeriod.startTime)) / 60000; // Convert milliseconds to minutes
+        }
+      });
+  
+      // Calculate total working time (in minutes)
+      const checkInTime = new Date(attendance.checkIn);
+      const totalWorkingTime = (checkOut - checkInTime) / 60000 - totalBreakTime; // Convert milliseconds to minutes
+  
+      attendance.checkOut = checkOut;
+      attendance.breakTime = totalBreakTime;
+      attendance.totalWorkingTime = totalWorkingTime; // Store total working time in minutes
+      attendance.breaks = breaks;
+  
+      await attendance.save();
+  
+      // Respond with success message
+      res.json({ success: true, message: 'Check-out successful', attendance });
+  
+    } catch (err) {
+      console.error('Error during check-out:', err);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+  };
+
+  const getStatus = async (req, res) => {
+    try {
+      const { userID } = req.user;
+  
+      const currentDate = new Date();
+      const startOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+      const endOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59);
+  
+      // Find the attendance record for the current day
+      const attendance = await Attendance.findOne({
+        userID: userID,
+        checkIn: { $gte: startOfDay, $lte: endOfDay }
+      });
+  
+      // Check if attendance record exists
+      if (!attendance) {
+        return res.json({
+            onBreak:false,
+             showCheckedIn: true });
+      }
+  
+      // Check if user has checked out
+      if (attendance.checkOut) {
+
+        return res.json({
+            onBreak:false,
+             showCheckedIn: true 
+            });
+      }
+  
+      // User has checked in but not checked out
+      if (attendance.checkIn && !attendance.checkOut) {
+        if(attendance.onBreak){
+            return res.json({
+                onBreak:true,
+                 showCheckedIn: false 
+                });
+        }else{
+            return res.json({
+                onBreak:false,
+                 showCheckedIn: false 
+                });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching attendance status:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+  };
+
+  const markBreak = async (req, res) => {
+    try {
+      const { userID } = req.user;
+
+      const currentDate = new Date();
+      const startOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+      const endOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59);
+  
+    
+      const now = new Date();
+  
+      const query = {
+        userID,
+        date: { $gte: startOfDay, $lt: endOfDay }
+      };
+  
+      let attendance = await Attendance.findOne(query);
+  
+      if (!attendance) {
+        return res.status(404).json({ success: false, message: 'Attendance record not found' });
+      }
+  
+      //  checking unclosed breaks
+      const breaks = attendance.breaks;
+      if (breaks.length > 0 && !breaks[breaks.length - 1].endTime) {
+        // If there's an open break, close it
+        breaks[breaks.length - 1].endTime = now;
+        attendance.onBreak = false;
+      } else {
+
+        // If no open break, start a new one
+        breaks.push({ startTime: now });
+        attendance.onBreak = true;
+      }
+  
+      attendance.breaks = breaks;
+      await attendance.save();
+  
+      res.json({ success: true, message: 'Break status updated', onBreak:attendance.onBreak });
+    } catch (err) {
+      console.error('Error updating break status:', err);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+  };
+  
+  
+  
 module.exports = {
     RegisterCheckIn,
     getCheckInTime,
     checkWorkingDay,
     checkAlreadyLoggedInToday,
+    checkInExists,
+    registerCheckOut,
+    getStatus,
+    markBreak,
 }
