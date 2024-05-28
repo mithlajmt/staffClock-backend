@@ -19,9 +19,9 @@ app.use(cors({
   origin: 'http://stafclock.illuminatespark.com', // Allow this origin
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allow these HTTP methods
   credentials: true, // Allow cookies to be sent
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+
 }));
-app.use(cors(corsOptions));
+
 
 
 mongoose
