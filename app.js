@@ -17,7 +17,7 @@ const mongoDBUrl = process.env.MONGODB_URL;
 app.use(express.json());
 app.use(cors());
 const corsOptions = {
-  origin: '*', 
+  origin: 'http://stafclockback.illuminatespark.com/auth/user', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
