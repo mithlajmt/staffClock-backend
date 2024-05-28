@@ -15,13 +15,12 @@ const port = process.env.PORT || 3000;
 const mongoDBUrl = process.env.MONGODB_URL;
 
 app.use(express.json());
-app.use(cors());
-const corsOptions = {
-  origin: 'http://stafclockback.illuminatespark.com/auth/user', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
+app.use(cors({
+  origin: 'http://stafclock.illuminatespark.com', // Allow this origin
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allow these HTTP methods
+  credentials: true, // Allow cookies to be sent
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+}));
 app.use(cors(corsOptions));
 
 
