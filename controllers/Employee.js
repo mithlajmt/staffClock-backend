@@ -148,9 +148,94 @@ const storeEmployee = async (req, res) => {
   }
 };
 
+const getEmployeesDatas = async (req, res) => {
+  try {
+      const { userID } = req.user;
+      const employees = await Employee.aggregate([
+          {
+              $match: { role:'employee', isActive: true }
+          },
+          {
+              $project: {
+                  _id: 0,
+                  name: 1,
+                  email: 1,
+                  userID: 1,
+                  jobTitle: 1,
+                  salary: 1,
+              }
+          }
+      ]);
+
+      // Send the response with the fetched employee data
+      res.json({ success: true, employees });
+  } catch (err) {
+      console.error('Error fetching employee data:', err);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+
+const getEmployeeData = async (req, res, next) => {
+  try {
+    const employeeID = req.params.userID;
+
+    const employee = await Employee.findOne({
+      userID:employeeID,
+    });
+
+    // Check if employee is found
+    if (employee) {
+      res.json({
+        success: true,
+        data: employee,
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Employee not found',
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching employee data:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+const terminateEmployee = async (req, res) => {
+  try {
+    const userID = req.params.userID;
+
+    // Find the employee by userID and update isActive to false
+    const updatedEmployee = await Employee.findOneAndUpdate(
+      { userID: userID },
+      { isActive: false },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedEmployee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    res.json({ success: true, message: 'Employee terminated successfully', employee: updatedEmployee });
+  } catch (err) {
+    console.error('Error terminating employee:', err);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+
+
 module.exports = {
   generateEmployeeID,
   storeEmployee,
   checkAllFields,
   ValidateData,
+  getEmployeesDatas,
+  getEmployeeData,
+  terminateEmployee
 };

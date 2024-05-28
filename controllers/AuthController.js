@@ -97,13 +97,14 @@ const AuthoriseUser = async (req, res) => {
 
 const getUserData = async (req, res) => {
   try {
-    const { role } = req.user;
+    const { role,userID } = req.user;
     console.log(role);
 
     res.status(200).json({
       success: true,
       data: {
-        role: role
+        role: role,
+        userID:userID,
       },
     });
   } catch (err) {

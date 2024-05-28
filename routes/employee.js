@@ -4,7 +4,11 @@ const {
      generateEmployeeID,
     storeEmployee,
     checkAllFields,
-    ValidateData,} = require('./../controllers/Employee')
+    ValidateData,
+    getEmployeesDatas,
+    getEmployeeData,
+    terminateEmployee,
+} = require('./../controllers/Employee')
 
 router.post('/employee',[
     checkAllFields,
@@ -12,5 +16,18 @@ router.post('/employee',[
     generateEmployeeID,
     storeEmployee,
 ]);
+
+router.get('/employee',[
+    getEmployeesDatas,
+])
+
+router.get('/employee/:userID',[
+    getEmployeeData,
+])
+
+
+router.delete('/employee/:userID',[
+    terminateEmployee,
+])
 
 module.exports = router;

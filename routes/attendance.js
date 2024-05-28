@@ -10,6 +10,7 @@ const {
     getStatus,
     markBreak,
     getPreviousAttendanceData,
+    getEmployeeAttendance,
 }=require('../controllers/attendanceController');
 
 const {
@@ -60,6 +61,12 @@ router.patch('/leaveRequest',[
 router.get('/',[
     getPreviousAttendanceData,
 ])
+
+router.get('/employee/:id',[
+    getEmployeeAttendance,
+])
+
+
 
 
 
