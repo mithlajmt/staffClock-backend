@@ -5,6 +5,7 @@ const Auth = require('./routes/Auth');
 const employee = require('./routes/employee');
 const attendanceRoute = require('./routes/attendance'); 
 const { checkToken, isAdmin } = require('./utilities/jwt');
+const adminRoutes = require('./routes/admin')
 const cors = require('cors');
 require("dotenv").config();
 

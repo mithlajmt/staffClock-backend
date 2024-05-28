@@ -155,9 +155,8 @@ const checkInExists = async (req, res, next) => {
   // Middleware to register employee check-out
   const registerCheckOut = async (req, res, next) => {
     try {
-      // Extract employee ID and current date
       const { userID } = req.user;
-      const currentDate = new Date().toISOString().split('T')[0]; 
+      const currentDate = new Date().toISOString().split('T')[0];
       const checkOut = new Date();
   
       const query = { userID, date: { $gte: new Date(currentDate), $lt: new Date(currentDate + 'T23:59:59Z') } };
@@ -183,16 +182,15 @@ const checkInExists = async (req, res, next) => {
   
       // Calculate total working time (in minutes)
       const checkInTime = new Date(attendance.checkIn);
-      const totalWorkingTime = (checkOut - checkInTime) / 60000 - totalBreakTime; // Convert milliseconds to minutes
+      const totalWorkTime = ((checkOut - checkInTime) / 60000) - totalBreakTime; // Convert milliseconds to minutes
   
       attendance.checkOut = checkOut;
       attendance.breakTime = totalBreakTime;
-      attendance.totalWorkingTime = totalWorkingTime; // Store total working time in minutes
+      attendance.totalWorkTime = totalWorkTime; // Store total working time in minutes
       attendance.breaks = breaks;
   
       await attendance.save();
   
-      // Respond with success message
       res.json({ success: true, message: 'Check-out successful', attendance });
   
     } catch (err) {
@@ -200,6 +198,7 @@ const checkInExists = async (req, res, next) => {
       res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
   };
+  
 
   const getStatus = async (req, res) => {
     try {
@@ -295,8 +294,63 @@ const checkInExists = async (req, res, next) => {
       res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
   };
+
+
+  const getPreviousAttendanceData = async (req, res) => {
+    try {
+      const { userID } = req.user;
   
+      const attendanceRecords = await Attendance.aggregate([
+        {
+          $match: {
+            userID: userID
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            date: { $dateToString: { format: "%d/%m/%Y", date: "$date" } }, // Format date as "day/month/year"
+            checkIn: 1,
+            checkOut: 1,
+            isLate: "$isLate",
+            totalWorkTime: "$totalWorkTime",
+            totalBreakTime: "$breakTime"
+          }
+        }
+      ]);
   
+      if (!attendanceRecords || attendanceRecords.length === 0) {
+        return res.status(404).json({ success: false, message: 'No attendance records found' });
+      }
+  
+      // Transform totalWorkTime and totalBreakTime to human-readable formats
+      const formattedRecords = attendanceRecords.map(record => {
+        const workHours = Math.floor(record.totalWorkTime / 60);
+        const workMinutes = Math.floor(record.totalWorkTime % 60);
+        const totalWorkedTime = `${workHours} hours ${workMinutes} minutes`;
+  
+        const breakHours = Math.floor(record.totalBreakTime / 60);
+        const breakMinutes = Math.floor(record.totalBreakTime % 60);
+        const totalBreakTime = `${breakHours} hours ${breakMinutes} minutes`;
+
+        const checkInTime = new Date(record.checkIn).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+      const checkOutTime = new Date(record.checkOut).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+  
+        return {
+          date: record.date,
+          totalWorkedTime,
+          totalBreakTime,
+          checkInTime,
+          checkOutTime,
+        };
+      });
+
+      res.json({ success: true, attendanceRecords: formattedRecords });
+    } catch (err) {
+      console.error('Error fetching attendance history:', err);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+  };
   
 module.exports = {
     RegisterCheckIn,
@@ -307,4 +361,5 @@ module.exports = {
     registerCheckOut,
     getStatus,
     markBreak,
+    getPreviousAttendanceData,
 }

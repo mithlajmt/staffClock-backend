@@ -9,27 +9,25 @@ const {
     registerCheckOut,
     getStatus,
     markBreak,
+    getPreviousAttendanceData,
 }=require('../controllers/attendanceController');
 
 const {
     validateLeaveDays,
     registerLeaveRequest,
-    getLeaveRequest
-} = require('./../controllers/leaveRequestController')
+    getLeaveRequest,
+    upDateLeaveRequest,
+} = require('../controllers/leaveRequestController')
+
+const{isAdmin}=require('./../utilities/jwt')
 
 
 router.post('/checkIn',checkWorkingDay,checkAlreadyLoggedInToday,RegisterCheckIn);
 
 router.get('/checkIn',getCheckInTime);
 
-router.post('/leaveRequest',[
-    validateLeaveDays,
-    registerLeaveRequest,
-]);
 
-router.get('/leaveRequest',[
-    getLeaveRequest,
-]);
+
 
 router.post('/checkOut',[
     checkInExists,
@@ -43,6 +41,29 @@ router.patch('/break',[
     checkInExists,
     markBreak,
 ])
+
+
+
+router.get('/leaveRequest',[
+    getLeaveRequest,
+]);
+
+router.post('/leaveRequest',[
+    validateLeaveDays,
+    registerLeaveRequest,
+]);
+router.patch('/leaveRequest',[
+    isAdmin,
+    upDateLeaveRequest,
+]);
+
+router.get('/',[
+    getPreviousAttendanceData,
+])
+
+
+
+
 
 
 module.exports = router;

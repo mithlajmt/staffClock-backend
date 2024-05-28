@@ -1,15 +1,16 @@
 
 const LeaveRequest = require('./../models/leaveRequest');
 const {getDatesBetween} = require('./../utilities/dateUtility');
+const mongoose = require('mongoose')
 
 
 const validateLeaveDays = async (req, res, next) => {
     try {
       const {start, end} = req.body.range;
-      console.log(req.body)
+      // console.log(req.body)
       const startd = new Date(start);
       const endt = new Date(end);
-      console.log(startd,endt)
+      // console.log(startd,endt)
   
       if (startd <= endt) {
         next();
@@ -46,7 +47,7 @@ const validateLeaveDays = async (req, res, next) => {
       
       const requestedDates = getDatesBetween(start, end);
 
-      console.log(requestedDates)
+      // console.log(requestedDates)
   
       if (requestedDates.length < 1) {
         return res.status(400).json({
@@ -112,10 +113,9 @@ const validateLeaveDays = async (req, res, next) => {
     try {
       const { role, userID} = req.user;
       const matchQuery = {};
-      console.log(role);
+      console.log('safdasfasfdaf')
   
-      // If the user is not a CompanyAdmin, filter by employeeID
-      if (role !== 'companyAdmin') {
+      if (role !== 'admin') {
         matchQuery.userID = userID;
       }
   
@@ -160,7 +160,6 @@ const validateLeaveDays = async (req, res, next) => {
         });
       }
   
-      console.log(leaveRequests, 'lololo');
       return res.status(200).json({
         success: true,
         data: leaveRequests,
@@ -175,10 +174,39 @@ const validateLeaveDays = async (req, res, next) => {
     }
   };
 
+  const upDateLeaveRequest = async (req, res) => {
+    try {
+      
+      const {status,id} = req.body;
+      const mID = new mongoose.Types.ObjectId(id);
+      console.log(mID, status);
+  
+      // eslint-disable-next-line max-len
+      const updatedLeave = await LeaveRequest.findByIdAndUpdate(mID, {reviewStatus: status}, {new: true});
+  
+      if (!updatedLeave) {
+        return res.status(200).json({
+          message: 'Leave request not found'});
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: 'Leave request updated successfully',
+        updatedLeave});
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'});
+    }
+  };
+
+
   
 
   module.exports = {
     validateLeaveDays,
     registerLeaveRequest,
     getLeaveRequest,
+    upDateLeaveRequest,
   }
